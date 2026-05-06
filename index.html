@@ -257,6 +257,30 @@
       color: #1e40af;
       margin-top: 8px;
     }
+
+    /* ── Toggle CNPJ/CPF ── */
+    .doc-toggle {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .toggle-btn {
+      padding: 5px 18px;
+      border: 1.5px solid var(--border);
+      border-radius: 99px;
+      background: #fff;
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all .15s;
+      font-family: inherit;
+    }
+    .toggle-btn.active {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -300,13 +324,17 @@
         </div>
         <div class="grid grid-2">
           <div class="form-group">
-            <label for="cnpj">CNPJ <span class="req">*</span></label>
+            <div class="doc-toggle">
+              <button type="button" class="toggle-btn active" id="btnCNPJ" onclick="setDocType('cnpj')">CNPJ</button>
+              <button type="button" class="toggle-btn" id="btnCPF" onclick="setDocType('cpf')">CPF</button>
+            </div>
+            <label for="cnpj"><span id="docTypeLabel">CNPJ</span> <span class="req">*</span></label>
             <input id="cnpj" name="cnpj" type="text" placeholder="00.000.000/0000-00" maxlength="18" autocomplete="off">
             <span class="field-msg" id="cnpjMsg"></span>
           </div>
           <div class="form-group">
-            <label for="razaoSocial">Razão Social <span class="req">*</span></label>
-            <input id="razaoSocial" name="razaoSocial" type="text" placeholder="Nome oficial da empresa">
+            <label for="razaoSocial">Razão Social / Nome <span class="req">*</span></label>
+            <input id="razaoSocial" name="razaoSocial" type="text" placeholder="Nome oficial da empresa ou pessoa">
             <span class="field-msg err" id="razaoSocialMsg">Campo obrigatório</span>
           </div>
         </div>
@@ -385,12 +413,12 @@
           </div>
           <div class="form-group">
             <label for="agencia">Agência <span class="req">*</span></label>
-            <input id="agencia" name="agencia" type="text" placeholder="0000" maxlength="10">
+            <input id="agencia" name="agencia" type="text" placeholder="0000" maxlength="4" inputmode="numeric">
             <span class="field-msg err" id="agenciaMsg">Campo obrigatório</span>
           </div>
           <div class="form-group">
             <label for="conta">Número da Conta <span class="req">*</span></label>
-            <input id="conta" name="conta" type="text" placeholder="00000-0" maxlength="20">
+            <input id="conta" name="conta" type="text" placeholder="000000000" maxlength="20" inputmode="numeric">
             <span class="field-msg err" id="contaMsg">Campo obrigatório</span>
           </div>
         </div>
@@ -459,6 +487,32 @@
         <span class="field-msg err" id="docFiscalMsg" style="margin-top:6px;display:none"></span>
       </div>
 
+      <!-- ⑥ Boleto -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">🧾</div>
+          <div>
+            <div class="section-title">Boleto Bancário</div>
+            <div class="section-subtitle">Envie o boleto caso o pagamento seja via boleto <span class="optional">(opcional)</span></div>
+          </div>
+        </div>
+        <div class="upload-area" id="uploadAreaBoleto">
+          <input type="file" id="boleto" name="boleto" accept=".pdf,.jpg,.jpeg,.png">
+          <div class="upload-emoji">🧾</div>
+          <div class="upload-title">Clique ou arraste o boleto aqui</div>
+          <div class="upload-hint">PDF, JPG ou PNG &nbsp;•&nbsp; Máximo 5 MB</div>
+        </div>
+        <div class="file-chip" id="fileChipBoleto">
+          <span class="file-chip-icon" id="fileIconBoleto">🧾</span>
+          <div class="file-chip-info">
+            <div class="file-chip-name" id="fileNameBoleto">—</div>
+            <div class="file-chip-size" id="fileSizeBoleto">—</div>
+          </div>
+          <button type="button" class="file-chip-rm" id="fileRmBoleto" title="Remover">✕</button>
+        </div>
+        <span class="field-msg err" id="boletoMsg" style="margin-top:6px;display:none"></span>
+      </div>
+
       <!-- Submit -->
       <div class="submit-section">
         <button type="submit" class="btn-submit" id="btnSubmit">
@@ -482,35 +536,94 @@
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCkhCA0NsWpX9OWe64CbTCGDWkneedjwGOWsJDJQAZ0l5sYaI4vUmxhzd47vzuHDGu-w/exec';
 
 // ============================================================
+//  TOGGLE CNPJ / CPF
+// ============================================================
+let docType = 'cnpj';
+
+function setDocType(tipo) {
+  docType = tipo;
+  const cnpjEl = document.getElementById('cnpj');
+  const label  = document.getElementById('docTypeLabel');
+  const btnCNPJ = document.getElementById('btnCNPJ');
+  const btnCPF  = document.getElementById('btnCPF');
+
+  cnpjEl.value = '';
+  cnpjEl.classList.remove('is-ok', 'is-error');
+  document.getElementById('cnpjMsg').className = 'field-msg';
+
+  if (tipo === 'cnpj') {
+    cnpjEl.placeholder = '00.000.000/0000-00';
+    cnpjEl.maxLength = 18;
+    label.textContent = 'CNPJ';
+    btnCNPJ.classList.add('active');
+    btnCPF.classList.remove('active');
+  } else {
+    cnpjEl.placeholder = '000.000.000-00';
+    cnpjEl.maxLength = 14;
+    label.textContent = 'CPF';
+    btnCPF.classList.add('active');
+    btnCNPJ.classList.remove('active');
+  }
+}
+
+// ============================================================
 //  MÁSCARAS
 // ============================================================
 
-// CNPJ  →  00.000.000/0000-00
+// CNPJ  →  00.000.000/0000-00  |  CPF  →  000.000.000-00
 const cnpjEl = document.getElementById('cnpj');
 cnpjEl.addEventListener('input', function () {
-  let v = this.value.replace(/\D/g, '').slice(0, 14);
-  v = v.replace(/^(\d{2})(\d)/, '$1.$2');
-  v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
-  v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
-  v = v.replace(/(\d{4})(\d)/, '$1-$2');
-  this.value = v;
+  let v = this.value.replace(/\D/g, '');
 
-  const digits = this.value.replace(/\D/g, '');
-  if (digits.length === 14) {
-    const valid = validarCNPJ(digits);
-    const msg = document.getElementById('cnpjMsg');
-    if (valid) {
-      this.classList.remove('is-error'); this.classList.add('is-ok');
-      msg.textContent = '✓ CNPJ válido';
-      msg.className = 'field-msg ok show';
+  if (docType === 'cnpj') {
+    v = v.slice(0, 14);
+    v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+    v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+    v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+    v = v.replace(/(\d{4})(\d)/, '$1-$2');
+    this.value = v;
+
+    const digits = v.replace(/\D/g, '');
+    if (digits.length === 14) {
+      const valid = validarCNPJ(digits);
+      const msg = document.getElementById('cnpjMsg');
+      if (valid) {
+        this.classList.remove('is-error'); this.classList.add('is-ok');
+        msg.textContent = '✓ CNPJ válido';
+        msg.className = 'field-msg ok show';
+      } else {
+        this.classList.remove('is-ok'); this.classList.add('is-error');
+        msg.textContent = '✗ CNPJ inválido — verifique os dígitos';
+        msg.className = 'field-msg err show';
+      }
     } else {
-      this.classList.remove('is-ok'); this.classList.add('is-error');
-      msg.textContent = '✗ CNPJ inválido — verifique os dígitos';
-      msg.className = 'field-msg err show';
+      this.classList.remove('is-ok', 'is-error');
+      document.getElementById('cnpjMsg').className = 'field-msg';
     }
   } else {
-    this.classList.remove('is-ok', 'is-error');
-    document.getElementById('cnpjMsg').className = 'field-msg';
+    v = v.slice(0, 11);
+    v = v.replace(/^(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+    v = v.replace(/\.(\d{3})(\d)/, '.$1-$2');
+    this.value = v;
+
+    const digits = v.replace(/\D/g, '');
+    if (digits.length === 11) {
+      const valid = validarCPF(digits);
+      const msg = document.getElementById('cnpjMsg');
+      if (valid) {
+        this.classList.remove('is-error'); this.classList.add('is-ok');
+        msg.textContent = '✓ CPF válido';
+        msg.className = 'field-msg ok show';
+      } else {
+        this.classList.remove('is-ok'); this.classList.add('is-error');
+        msg.textContent = '✗ CPF inválido — verifique os dígitos';
+        msg.className = 'field-msg err show';
+      }
+    } else {
+      this.classList.remove('is-ok', 'is-error');
+      document.getElementById('cnpjMsg').className = 'field-msg';
+    }
   }
 });
 
@@ -590,6 +703,63 @@ function fmtSize(b) {
   return (b / 1048576).toFixed(1) + ' MB';
 }
 
+// Agência — apenas números, máximo 4 dígitos
+document.getElementById('agencia').addEventListener('input', function () {
+  this.value = this.value.replace(/\D/g, '').slice(0, 4);
+});
+
+// Conta — apenas números
+document.getElementById('conta').addEventListener('input', function () {
+  this.value = this.value.replace(/\D/g, '');
+});
+
+// ============================================================
+//  UPLOAD — BOLETO
+// ============================================================
+const uploadAreaBoleto = document.getElementById('uploadAreaBoleto');
+const boletoInput      = document.getElementById('boleto');
+const fileChipBoleto   = document.getElementById('fileChipBoleto');
+const fileIconBoleto   = document.getElementById('fileIconBoleto');
+const fileNameBoleto   = document.getElementById('fileNameBoleto');
+const fileSizeBoleto   = document.getElementById('fileSizeBoleto');
+const fileRmBoleto     = document.getElementById('fileRmBoleto');
+const boletoMsg        = document.getElementById('boletoMsg');
+let selectedBoleto = null;
+
+function attachBoleto(file) {
+  if (file.size > MAX_BYTES) {
+    boletoMsg.textContent = '⚠️ O arquivo excede 5 MB. Escolha um arquivo menor.';
+    boletoMsg.classList.add('show');
+    selectedBoleto = null;
+    return;
+  }
+  boletoMsg.classList.remove('show');
+  selectedBoleto = file;
+  const ext = file.name.split('.').pop().toLowerCase();
+  fileIconBoleto.textContent = EXT_ICONS[ext] || '🧾';
+  fileNameBoleto.textContent = file.name;
+  fileSizeBoleto.textContent = fmtSize(file.size);
+  fileChipBoleto.classList.add('show');
+}
+
+boletoInput.addEventListener('change', e => { if (e.target.files[0]) attachBoleto(e.target.files[0]); });
+
+fileRmBoleto.addEventListener('click', () => {
+  selectedBoleto = null;
+  boletoInput.value = '';
+  fileChipBoleto.classList.remove('show');
+  boletoMsg.classList.remove('show');
+});
+
+uploadAreaBoleto.addEventListener('dragover',  e => { e.preventDefault(); uploadAreaBoleto.classList.add('dragover'); });
+uploadAreaBoleto.addEventListener('dragleave', () => uploadAreaBoleto.classList.remove('dragover'));
+uploadAreaBoleto.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadAreaBoleto.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f) { boletoInput.files = e.dataTransfer.files; attachBoleto(f); }
+});
+
 // ============================================================
 //  VALIDAÇÃO DO CNPJ — algoritmo oficial
 // ============================================================
@@ -604,6 +774,20 @@ function validarCNPJ(c) {
     return r < 2 ? 0 : 11 - r;
   };
   return d[12] === calc(d.slice(0,12), w1) && d[13] === calc(d.slice(0,13), w2);
+}
+
+// ============================================================
+//  VALIDAÇÃO DO CPF — algoritmo oficial
+// ============================================================
+function validarCPF(c) {
+  if (/^(\d)\1+$/.test(c)) return false;
+  const d = c.split('').map(Number);
+  const calc = (digits, len) => {
+    const s = digits.slice(0, len).reduce((a, n, i) => a + n * (len + 1 - i), 0);
+    const r = (s * 10) % 11;
+    return r >= 10 ? 0 : r;
+  };
+  return d[9] === calc(d, 9) && d[10] === calc(d, 10);
 }
 
 // ============================================================
@@ -626,12 +810,17 @@ function validateForm() {
     }
   }
 
-  // CNPJ
+  // CNPJ ou CPF
   const cnpjDigits = cnpjEl.value.replace(/\D/g, '');
-  if (!cnpjDigits || !validarCNPJ(cnpjDigits)) {
+  const docValido = docType === 'cnpj'
+    ? (cnpjDigits.length === 14 && validarCNPJ(cnpjDigits))
+    : (cnpjDigits.length === 11 && validarCPF(cnpjDigits));
+  if (!docValido) {
     cnpjEl.classList.add('is-error');
     const m = document.getElementById('cnpjMsg');
-    m.textContent = '✗ CNPJ inválido — verifique os dígitos';
+    m.textContent = docType === 'cnpj'
+      ? '✗ CNPJ inválido — verifique os dígitos'
+      : '✗ CPF inválido — verifique os dígitos';
     m.className = 'field-msg err show';
     ok = false;
   }
@@ -674,7 +863,12 @@ document.getElementById('mainForm').addEventListener('submit', async function (e
   try {
     const payload = await buildPayload();
 
-    await enviarViaFormulario(payload);
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
 
     document.getElementById('formCard').style.display = 'none';
     document.getElementById('alertSuccess').classList.add('show');
@@ -701,6 +895,7 @@ async function buildPayload() {
   }
 
   const payload = {
+    tipoDocumento:  docType === 'cnpj' ? 'CNPJ' : 'CPF',
     cnpj:           g('cnpj'),
     razaoSocial:    g('razaoSocial'),
     email:          g('email'),
@@ -722,6 +917,15 @@ async function buildPayload() {
     payload.file = {
       name:     selectedFile.name,
       mimeType: selectedFile.type || 'application/octet-stream',
+      content:  b64
+    };
+  }
+
+  if (selectedBoleto) {
+    const b64 = await toBase64(selectedBoleto);
+    payload.boleto = {
+      name:     selectedBoleto.name,
+      mimeType: selectedBoleto.type || 'application/octet-stream',
       content:  b64
     };
   }
