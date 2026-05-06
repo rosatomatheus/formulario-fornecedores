@@ -863,7 +863,7 @@ document.getElementById('mainForm').addEventListener('submit', async function (e
   try {
     const payload = await buildPayload();
 
-    await enviarViaFormulario(payload);
+    await enviarViaJSONP(payload);
 
     document.getElementById('formCard').style.display = 'none';
     document.getElementById('alertSuccess').classList.add('show');
@@ -928,34 +928,54 @@ async function buildPayload() {
   return payload;
 }
 
-function enviarViaFormulario(payload) {
-  return new Promise((resolve) => {
-    const iframe = document.createElement('iframe');
-    iframe.name = 'submit-frame';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
+function enviarViaJSONP(payload) {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'gsCallback' + Date.now();
 
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = APPS_SCRIPT_URL;
-    form.target = 'submit-frame';
-    form.style.display = 'none';
+    const timer = setTimeout(() => {
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      resolve(); // assume sucesso após timeout
+    }, 15000);
 
-    const field = document.createElement('input');
-    field.type = 'hidden';
-    field.name = 'payload';
-    field.value = JSON.stringify(payload);
-    form.appendChild(field);
+    window[callbackName] = function(result) {
+      clearTimeout(timer);
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      if (result && result.success) resolve();
+      else reject(new Error((result && result.error) || 'Erro desconhecido'));
+    };
 
-    document.body.appendChild(form);
-    form.submit();
+    // Envia apenas os campos de texto (arquivos pelo Drive separadamente)
+    const textPayload = {
+      tipoDocumento:  payload.tipoDocumento,
+      cnpj:           payload.cnpj,
+      razaoSocial:    payload.razaoSocial,
+      email:          payload.email,
+      telefone:       payload.telefone,
+      banco:          payload.banco,
+      tipoConta:      payload.tipoConta,
+      agencia:        payload.agencia,
+      conta:          payload.conta,
+      chavePix:       payload.chavePix,
+      valorReceber:   payload.valorReceber,
+      dataVencimento: payload.dataVencimento,
+      descricao:      payload.descricao,
+      dataEnvio:      payload.dataEnvio,
+      fileName:       payload.file   ? payload.file.name   : '',
+      boletoName:     payload.boleto ? payload.boleto.name : ''
+    };
 
-    // Aguarda 4 segundos (tempo suficiente para o Apps Script processar)
-    setTimeout(() => {
-      document.body.removeChild(form);
-      document.body.removeChild(iframe);
-      resolve();
-    }, 4000);
+    const script = document.createElement('script');
+    script.src = APPS_SCRIPT_URL
+      + '?callback=' + callbackName
+      + '&data=' + encodeURIComponent(JSON.stringify(textPayload));
+    script.onerror = () => {
+      clearTimeout(timer);
+      delete window[callbackName];
+      reject(new Error('Erro de conexão'));
+    };
+    document.head.appendChild(script);
   });
 }
 
