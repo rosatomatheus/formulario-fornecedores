@@ -928,6 +928,36 @@ async function buildPayload() {
   return payload;
 }
 
+function enviarViaFormulario(payload) {
+  return new Promise((resolve) => {
+    const iframe = document.createElement('iframe');
+    iframe.name = 'submit-frame';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = APPS_SCRIPT_URL;
+    form.target = 'submit-frame';
+    form.style.display = 'none';
+
+    const field = document.createElement('input');
+    field.type = 'hidden';
+    field.name = 'payload';
+    field.value = JSON.stringify(payload);
+    form.appendChild(field);
+
+    document.body.appendChild(form);
+    form.submit();
+
+    setTimeout(() => {
+      if (form.parentNode) form.parentNode.removeChild(form);
+      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      resolve();
+    }, 6000);
+  });
+}
+
 function enviarViaJSONP(payload) {
   return new Promise((resolve, reject) => {
     const callbackName = 'gsCallback' + Date.now();
