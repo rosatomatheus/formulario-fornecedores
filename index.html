@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro de Fornecedor</title>
+  <style>
+    :root {
+      --primary: #1a56db;
+      --primary-dark: #1e429f;
+      --success: #10b981;
+      --error: #ef4444;
+      --border: #d1d5db;
+      --text: #111827;
+      --text-light: #6b7280;
+      --bg: #f3f4f6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #4c1d95 100%);
+      min-height: 100vh;
+      padding: 24px 16px 40px;
+    }
+
+    .container { max-width: 800px; margin: 0 auto; }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      padding: 32px 0 28px;
+      color: #fff;
+    }
+    .header-badge {
+      display: inline-block;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 99px;
+      padding: 6px 18px;
+      font-size: .8rem;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      color: rgba(255,255,255,.9);
+    }
+    .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+    .header p  { font-size: .95rem; opacity: .85; max-width: 480px; margin: 0 auto; }
+
+    /* ── Alerts ── */
+    .alert {
+      display: none;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 18px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      animation: slideDown .3s ease;
+    }
+    .alert.show { display: flex; }
+    .alert-success { background: #f0fdf4; border: 1.5px solid #86efac; color: #166534; }
+    .alert-error   { background: #fef2f2; border: 1.5px solid #fca5a5; color: #991b1b; }
+    .alert-icon { font-size: 1.4rem; margin-top: 1px; flex-shrink: 0; }
+    .alert-content strong { display: block; font-size: 1rem; margin-bottom: 4px; }
+    .alert-content p { font-size: .875rem; }
+    @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 25px 60px rgba(0,0,0,.2);
+      overflow: hidden;
+    }
+
+    /* ── Section ── */
+    .section {
+      padding: 30px 32px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .section:last-child { border-bottom: none; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .section-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+    .section-title    { font-size: 1.05rem; font-weight: 600; color: var(--text); }
+    .section-subtitle { font-size: .8rem; color: var(--text-light); margin-top: 2px; }
+
+    /* ── Grid ── */
+    .grid   { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    @media (max-width: 600px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .section { padding: 22px 20px; }
+      .header h1 { font-size: 1.5rem; }
+    }
+
+    /* ── Form fields ── */
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+    label {
+      font-size: .85rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+    label .req      { color: var(--error); margin-left: 2px; }
+    label .optional { color: var(--text-light); font-weight: 400; font-size: .78rem; margin-left: 4px; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: .925rem;
+      color: var(--text);
+      background: #fff;
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
+      font-family: inherit;
+      appearance: auto;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26,86,219,.12);
+    }
+    input.is-error, select.is-error, textarea.is-error { border-color: var(--error); }
+    input.is-ok { border-color: var(--success); }
+
+    .field-msg {
+      font-size: .78rem;
+      display: none;
+      margin-top: 1px;
+    }
+    .field-msg.show { display: block; }
+    .field-msg.err  { color: var(--error); }
+    .field-msg.ok   { color: var(--success); }
+
+    textarea { resize: vertical; min-height: 100px; }
+
+    /* ── Upload ── */
+    .upload-wrap { position: relative; }
+    .upload-area {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 34px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      position: relative;
+    }
+    .upload-area:hover, .upload-area.dragover {
+      border-color: var(--primary);
+      background: rgba(26,86,219,.03);
+    }
+    .upload-area input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer;
+      width: 100%; height: 100%;
+    }
+    .upload-emoji { font-size: 2.2rem; margin-bottom: 10px; }
+    .upload-title { font-size: .95rem; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+    .upload-hint  { font-size: .78rem; color: var(--text-light); }
+
+    .file-chip {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #f0fdf4;
+      border: 1.5px solid #86efac;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    .file-chip.show { display: flex; }
+    .file-chip-icon { font-size: 1.5rem; }
+    .file-chip-info { flex: 1; min-width: 0; }
+    .file-chip-name { font-size: .875rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-chip-size { font-size: .75rem; color: var(--text-light); }
+    .file-chip-rm {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-light); font-size: 1.1rem;
+      border-radius: 4px; padding: 4px 6px;
+      transition: color .15s;
+      flex-shrink: 0;
+    }
+    .file-chip-rm:hover { color: var(--error); }
+
+    /* ── Submit ── */
+    .submit-section {
+      padding: 28px 32px;
+      background: #f9fafb;
+      text-align: center;
+    }
+    .btn-submit {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      border: none;
+      padding: 14px 52px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s, opacity .15s;
+      box-shadow: 0 4px 15px rgba(26,86,219,.35);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 22px rgba(26,86,219,.45);
+    }
+    .btn-submit:disabled { opacity: .65; cursor: not-allowed; transform: none; }
+
+    .spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    .btn-submit.loading .spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .privacy-note { margin-top: 14px; font-size: .78rem; color: var(--text-light); }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      color: rgba(255,255,255,.6);
+      font-size: .78rem;
+      padding-top: 24px;
+    }
+
+    /* ── PIX hint ── */
+    .hint-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: .8rem;
+      color: #1e40af;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-badge">Formulário Seguro</div>
+    <h1>📋 Cadastro de Fornecedor</h1>
+    <p>Preencha as informações abaixo para concluir seu cadastro e receber o pagamento.</p>
+  </div>
+
+  <!-- Alerts -->
+  <div class="alert alert-success" id="alertSuccess">
+    <span class="alert-icon">✅</span>
+    <div class="alert-content">
+      <strong>Cadastro enviado com sucesso!</strong>
+      <p>Suas informações foram recebidas. Entraremos em contato em breve para confirmar o pagamento.</p>
+    </div>
+  </div>
+  <div class="alert alert-error" id="alertError">
+    <span class="alert-icon">❌</span>
+    <div class="alert-content">
+      <strong>Erro ao enviar o cadastro</strong>
+      <p id="errorMsg">Verifique sua conexão e tente novamente.</p>
+    </div>
+  </div>
+
+  <!-- Card -->
+  <div class="card" id="formCard">
+    <form id="mainForm" novalidate>
+
+      <!-- ① Dados da Empresa -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">🏢</div>
+          <div>
+            <div class="section-title">Dados da Empresa</div>
+            <div class="section-subtitle">Identificação fiscal do fornecedor</div>
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label for="cnpj">CNPJ <span class="req">*</span></label>
+            <input id="cnpj" name="cnpj" type="text" placeholder="00.000.000/0000-00" maxlength="18" autocomplete="off">
+            <span class="field-msg" id="cnpjMsg"></span>
+          </div>
+          <div class="form-group">
+            <label for="razaoSocial">Razão Social <span class="req">*</span></label>
+            <input id="razaoSocial" name="razaoSocial" type="text" placeholder="Nome oficial da empresa">
+            <span class="field-msg err" id="razaoSocialMsg">Campo obrigatório</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ② Contato -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">📞</div>
+          <div>
+            <div class="section-title">Contato</div>
+            <div class="section-subtitle">E-mail e telefone para comunicação</div>
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label for="email">E-mail <span class="req">*</span></label>
+            <input id="email" name="email" type="email" placeholder="contato@empresa.com.br">
+            <span class="field-msg err" id="emailMsg">E-mail inválido</span>
+          </div>
+          <div class="form-group">
+            <label for="telefone">Telefone <span class="req">*</span></label>
+            <input id="telefone" name="telefone" type="text" placeholder="(00) 00000-0000" maxlength="15">
+            <span class="field-msg err" id="telefoneMsg">Telefone inválido</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ③ Dados Bancários -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">🏦</div>
+          <div>
+            <div class="section-title">Dados Bancários</div>
+            <div class="section-subtitle">Para processamento do pagamento</div>
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label for="banco">Banco <span class="req">*</span></label>
+            <select id="banco" name="banco">
+              <option value="">Selecione o banco</option>
+              <option>001 - Banco do Brasil</option>
+              <option>033 - Santander</option>
+              <option>077 - Banco Inter</option>
+              <option>102 - XP Investimentos</option>
+              <option>104 - Caixa Econômica Federal</option>
+              <option>197 - Stone</option>
+              <option>208 - BTG Pactual</option>
+              <option>212 - Banco Original</option>
+              <option>237 - Bradesco</option>
+              <option>260 - Nubank</option>
+              <option>290 - PagBank</option>
+              <option>323 - Mercado Pago</option>
+              <option>336 - C6 Bank</option>
+              <option>341 - Itaú Unibanco</option>
+              <option>422 - Banco Safra</option>
+              <option>735 - Neon</option>
+              <option>745 - Citibank</option>
+              <option>748 - Sicredi</option>
+              <option>756 - Sicoob</option>
+              <option>Outro</option>
+            </select>
+            <span class="field-msg err" id="bancoMsg">Selecione um banco</span>
+          </div>
+          <div class="form-group">
+            <label for="tipoConta">Tipo de Conta <span class="req">*</span></label>
+            <select id="tipoConta" name="tipoConta">
+              <option value="">Selecione o tipo</option>
+              <option>Conta Corrente</option>
+              <option>Conta Poupança</option>
+              <option>Conta Salário</option>
+              <option>Conta de Pagamento</option>
+            </select>
+            <span class="field-msg err" id="tipoContaMsg">Selecione o tipo</span>
+          </div>
+          <div class="form-group">
+            <label for="agencia">Agência <span class="req">*</span></label>
+            <input id="agencia" name="agencia" type="text" placeholder="0000" maxlength="10">
+            <span class="field-msg err" id="agenciaMsg">Campo obrigatório</span>
+          </div>
+          <div class="form-group">
+            <label for="conta">Número da Conta <span class="req">*</span></label>
+            <input id="conta" name="conta" type="text" placeholder="00000-0" maxlength="20">
+            <span class="field-msg err" id="contaMsg">Campo obrigatório</span>
+          </div>
+        </div>
+        <div class="grid" style="margin-top:16px">
+          <div class="form-group">
+            <label for="chavePix">Chave PIX <span class="optional">(opcional)</span></label>
+            <input id="chavePix" name="chavePix" type="text" placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória">
+            <div class="hint-box">💡 Preencher a chave PIX agiliza o pagamento. Você pode usar CPF, CNPJ, e-mail, telefone ou a chave aleatória gerada pelo seu banco.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ④ Pagamento -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">💰</div>
+          <div>
+            <div class="section-title">Informações de Pagamento</div>
+            <div class="section-subtitle">Valor, vencimento e descrição do serviço</div>
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label for="valorReceber">Valor a Receber <span class="req">*</span></label>
+            <input id="valorReceber" name="valorReceber" type="text" placeholder="R$ 0,00">
+            <span class="field-msg err" id="valorReceberMsg">Informe o valor</span>
+          </div>
+          <div class="form-group">
+            <label for="dataVencimento">Data de Vencimento <span class="req">*</span></label>
+            <input id="dataVencimento" name="dataVencimento" type="date">
+            <span class="field-msg err" id="dataVencimentoMsg">Informe a data</span>
+          </div>
+        </div>
+        <div class="grid" style="margin-top:16px">
+          <div class="form-group">
+            <label for="descricao">Descrição do Serviço ou Produto <span class="req">*</span></label>
+            <textarea id="descricao" name="descricao" placeholder="Descreva detalhadamente o serviço prestado ou produto fornecido, incluindo período de referência, quantidades ou outras informações relevantes..."></textarea>
+            <span class="field-msg err" id="descricaoMsg">Informe a descrição</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑤ Documento Fiscal -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">📄</div>
+          <div>
+            <div class="section-title">Documento Fiscal</div>
+            <div class="section-subtitle">NF-e, NFS-e, recibo ou comprovante</div>
+          </div>
+        </div>
+        <div class="upload-area" id="uploadArea">
+          <input type="file" id="docFiscal" name="docFiscal" accept=".pdf,.xml,.jpg,.jpeg,.png,.webp">
+          <div class="upload-emoji">📎</div>
+          <div class="upload-title">Clique ou arraste o arquivo aqui</div>
+          <div class="upload-hint">PDF, XML, JPG ou PNG &nbsp;•&nbsp; Máximo 5 MB</div>
+        </div>
+        <div class="file-chip" id="fileChip">
+          <span class="file-chip-icon" id="fileIcon">📄</span>
+          <div class="file-chip-info">
+            <div class="file-chip-name" id="fileName">—</div>
+            <div class="file-chip-size" id="fileSize">—</div>
+          </div>
+          <button type="button" class="file-chip-rm" id="fileRm" title="Remover">✕</button>
+        </div>
+        <span class="field-msg err" id="docFiscalMsg" style="margin-top:6px;display:none"></span>
+      </div>
+
+      <!-- Submit -->
+      <div class="submit-section">
+        <button type="submit" class="btn-submit" id="btnSubmit">
+          <span class="spinner" id="spinner"></span>
+          <span id="btnText">Enviar Cadastro</span>
+        </button>
+        <div class="privacy-note">🔒 Seus dados são protegidos e utilizados exclusivamente para fins de cadastro e pagamento.</div>
+      </div>
+
+    </form>
+  </div>
+
+  <div class="footer">Formulário de Cadastro de Fornecedores</div>
+</div>
+
+<script>
+// ============================================================
+//  ⚠️  CONFIGURAÇÃO OBRIGATÓRIA
+//  Cole aqui a URL gerada pelo Google Apps Script (Passo 9 do guia)
+// ============================================================
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCkhCA0NsWpX9OWe64CbTCGDWkneedjwGOWsJDJQAZ0l5sYaI4vUmxhzd47vzuHDGu-w/exec';
+
+// ============================================================
+//  MÁSCARAS
+// ============================================================
+
+// CNPJ  →  00.000.000/0000-00
+const cnpjEl = document.getElementById('cnpj');
+cnpjEl.addEventListener('input', function () {
+  let v = this.value.replace(/\D/g, '').slice(0, 14);
+  v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+  v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+  v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+  v = v.replace(/(\d{4})(\d)/, '$1-$2');
+  this.value = v;
+
+  const digits = this.value.replace(/\D/g, '');
+  if (digits.length === 14) {
+    const valid = validarCNPJ(digits);
+    const msg = document.getElementById('cnpjMsg');
+    if (valid) {
+      this.classList.remove('is-error'); this.classList.add('is-ok');
+      msg.textContent = '✓ CNPJ válido';
+      msg.className = 'field-msg ok show';
+    } else {
+      this.classList.remove('is-ok'); this.classList.add('is-error');
+      msg.textContent = '✗ CNPJ inválido — verifique os dígitos';
+      msg.className = 'field-msg err show';
+    }
+  } else {
+    this.classList.remove('is-ok', 'is-error');
+    document.getElementById('cnpjMsg').className = 'field-msg';
+  }
+});
+
+// Telefone  →  (00) 00000-0000
+document.getElementById('telefone').addEventListener('input', function () {
+  let v = this.value.replace(/\D/g, '').slice(0, 11);
+  if (v.length > 10) v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+  else if (v.length > 6) v = v.replace(/^(\d{2})(\d{4,5})(\d{0,4})$/, '($1) $2-$3');
+  else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+  else if (v.length) v = '(' + v;
+  this.value = v;
+});
+
+// Valor  →  R$ 1.234,56
+document.getElementById('valorReceber').addEventListener('input', function () {
+  let raw = this.value.replace(/\D/g, '');
+  if (!raw) { this.value = ''; return; }
+  let num = parseInt(raw, 10);
+  let dec = (num / 100).toFixed(2).split('.');
+  dec[0] = dec[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  this.value = 'R$ ' + dec[0] + ',' + dec[1];
+});
+
+// ============================================================
+//  UPLOAD
+// ============================================================
+const uploadArea = document.getElementById('uploadArea');
+const fileInput  = document.getElementById('docFiscal');
+const fileChip   = document.getElementById('fileChip');
+const fileIconEl = document.getElementById('fileIcon');
+const fileNameEl = document.getElementById('fileName');
+const fileSizeEl = document.getElementById('fileSize');
+const fileRmBtn  = document.getElementById('fileRm');
+const docFiscalMsg = document.getElementById('docFiscalMsg');
+let selectedFile = null;
+
+const EXT_ICONS = { pdf:'📕', xml:'📋', jpg:'🖼️', jpeg:'🖼️', png:'🖼️', webp:'🖼️' };
+const MAX_BYTES = 5 * 1024 * 1024;
+
+function attachFile(file) {
+  if (file.size > MAX_BYTES) {
+    docFiscalMsg.textContent = '⚠️ O arquivo excede 5 MB. Escolha um arquivo menor.';
+    docFiscalMsg.classList.add('show');
+    selectedFile = null;
+    return;
+  }
+  docFiscalMsg.classList.remove('show');
+  selectedFile = file;
+  const ext = file.name.split('.').pop().toLowerCase();
+  fileIconEl.textContent = EXT_ICONS[ext] || '📄';
+  fileNameEl.textContent = file.name;
+  fileSizeEl.textContent = fmtSize(file.size);
+  fileChip.classList.add('show');
+}
+
+fileInput.addEventListener('change', e => { if (e.target.files[0]) attachFile(e.target.files[0]); });
+
+fileRmBtn.addEventListener('click', () => {
+  selectedFile = null;
+  fileInput.value = '';
+  fileChip.classList.remove('show');
+  docFiscalMsg.classList.remove('show');
+});
+
+uploadArea.addEventListener('dragover',  e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f) { fileInput.files = e.dataTransfer.files; attachFile(f); }
+});
+
+function fmtSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  return (b / 1048576).toFixed(1) + ' MB';
+}
+
+// ============================================================
+//  VALIDAÇÃO DO CNPJ — algoritmo oficial
+// ============================================================
+function validarCNPJ(c) {
+  if (/^(\d)\1+$/.test(c)) return false;
+  const w1 = [5,4,3,2,9,8,7,6,5,4,3,2];
+  const w2 = [6,5,4,3,2,9,8,7,6,5,4,3,2];
+  const d = c.split('').map(Number);
+  const calc = (digits, w) => {
+    const s = digits.reduce((a, n, i) => a + n * w[i], 0);
+    const r = s % 11;
+    return r < 2 ? 0 : 11 - r;
+  };
+  return d[12] === calc(d.slice(0,12), w1) && d[13] === calc(d.slice(0,13), w2);
+}
+
+// ============================================================
+//  VALIDAÇÃO DO FORMULÁRIO
+// ============================================================
+function validateForm() {
+  let ok = true;
+
+  function check(id, msgId, condition, msg) {
+    const el = document.getElementById(id);
+    const msgEl = document.getElementById(msgId);
+    if (!condition(el.value)) {
+      el.classList.add('is-error');
+      if (msg) msgEl.textContent = msg;
+      msgEl.classList.add('show');
+      ok = false;
+    } else {
+      el.classList.remove('is-error');
+      msgEl.classList.remove('show');
+    }
+  }
+
+  // CNPJ
+  const cnpjDigits = cnpjEl.value.replace(/\D/g, '');
+  if (!cnpjDigits || !validarCNPJ(cnpjDigits)) {
+    cnpjEl.classList.add('is-error');
+    const m = document.getElementById('cnpjMsg');
+    m.textContent = '✗ CNPJ inválido — verifique os dígitos';
+    m.className = 'field-msg err show';
+    ok = false;
+  }
+
+  check('razaoSocial', 'razaoSocialMsg', v => v.trim().length > 0, 'Campo obrigatório');
+  check('email', 'emailMsg', v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()), 'E-mail inválido');
+  check('telefone', 'telefoneMsg', v => v.replace(/\D/g,'').length >= 10, 'Telefone inválido');
+  check('banco', 'bancoMsg', v => v !== '', 'Selecione um banco');
+  check('tipoConta', 'tipoContaMsg', v => v !== '', 'Selecione o tipo de conta');
+  check('agencia', 'agenciaMsg', v => v.trim().length > 0, 'Campo obrigatório');
+  check('conta', 'contaMsg', v => v.trim().length > 0, 'Campo obrigatório');
+  check('valorReceber', 'valorReceberMsg', v => v.trim().length > 0, 'Informe o valor');
+  check('dataVencimento', 'dataVencimentoMsg', v => v !== '', 'Informe a data de vencimento');
+  check('descricao', 'descricaoMsg', v => v.trim().length > 0, 'Informe a descrição');
+
+  return ok;
+}
+
+// ============================================================
+//  SUBMIT
+// ============================================================
+document.getElementById('mainForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  if (!validateForm()) {
+    document.querySelector('.is-error')?.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
+
+  if (APPS_SCRIPT_URL === 'COLE_AQUI_A_URL_DO_GOOGLE_APPS_SCRIPT') {
+    alert('⚠️ Configuração pendente: cole a URL do Google Apps Script no arquivo index.html (linha da constante APPS_SCRIPT_URL).');
+    return;
+  }
+
+  const btn = document.getElementById('btnSubmit');
+  const txt = document.getElementById('btnText');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  txt.textContent = 'Enviando…';
+
+  try {
+    const payload = await buildPayload();
+
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await resp.json();
+
+    if (result.success) {
+      document.getElementById('formCard').style.display = 'none';
+      document.getElementById('alertSuccess').classList.add('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      throw new Error(result.error || 'Erro desconhecido');
+    }
+  } catch (err) {
+    document.getElementById('errorMsg').textContent = err.message || 'Verifique sua conexão e tente novamente.';
+    document.getElementById('alertError').classList.add('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    txt.textContent = 'Enviar Cadastro';
+  }
+});
+
+async function buildPayload() {
+  const g = id => document.getElementById(id).value.trim();
+
+  // Formatar data para dd/mm/aaaa
+  const rawDate = g('dataVencimento');
+  let fmtDate = rawDate;
+  if (rawDate) {
+    const [y, m, d] = rawDate.split('-');
+    fmtDate = `${d}/${m}/${y}`;
+  }
+
+  const payload = {
+    cnpj:           g('cnpj'),
+    razaoSocial:    g('razaoSocial'),
+    email:          g('email'),
+    telefone:       g('telefone'),
+    banco:          g('banco'),
+    tipoConta:      g('tipoConta'),
+    agencia:        g('agencia'),
+    conta:          g('conta'),
+    chavePix:       g('chavePix'),
+    valorReceber:   g('valorReceber'),
+    dataVencimento: fmtDate,
+    descricao:      g('descricao'),
+    dataEnvio:      new Date().toLocaleString('pt-BR'),
+    file: null
+  };
+
+  if (selectedFile) {
+    const b64 = await toBase64(selectedFile);
+    payload.file = {
+      name:     selectedFile.name,
+      mimeType: selectedFile.type || 'application/octet-stream',
+      content:  b64
+    };
+  }
+
+  return payload;
+}
+
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+</script>
+</body>
+</html>
