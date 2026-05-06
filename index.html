@@ -863,12 +863,7 @@ document.getElementById('mainForm').addEventListener('submit', async function (e
   try {
     const payload = await buildPayload();
 
-    await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
-    });
+    await enviarViaFormulario(payload);
 
     document.getElementById('formCard').style.display = 'none';
     document.getElementById('alertSuccess').classList.add('show');
