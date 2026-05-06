@@ -863,7 +863,7 @@ document.getElementById('mainForm').addEventListener('submit', async function (e
   try {
     const payload = await buildPayload();
 
-    await enviarViaJSONP(payload);
+    await enviarViaFormulario(payload);
 
     document.getElementById('formCard').style.display = 'none';
     document.getElementById('alertSuccess').classList.add('show');
