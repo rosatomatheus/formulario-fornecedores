@@ -6,47 +6,49 @@
   <title>Cadastro de Fornecedor</title>
   <style>
     :root {
-      --primary: #1a56db;
-      --primary-dark: #1e429f;
+      --primary: #c0392b;
+      --primary-dark: #7b241c;
       --success: #10b981;
       --error: #ef4444;
-      --border: #d1d5db;
+      --border: #e5e7eb;
       --text: #111827;
       --text-light: #6b7280;
-      --bg: #f3f4f6;
+      --bg: #f1f5f9;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-      background: linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #4c1d95 100%);
+      background: #f1f5f9;
       min-height: 100vh;
-      padding: 24px 16px 40px;
+      padding: 32px 16px 48px;
     }
 
     .container { max-width: 800px; margin: 0 auto; }
 
-    /* ── Header ── */
-    .header {
+    /* ── Card Header (gradient) ── */
+    .card-header {
+      background: linear-gradient(135deg, #c0392b 0%, #7b241c 100%);
+      padding: 36px 32px 32px;
       text-align: center;
-      padding: 32px 0 28px;
-      color: #fff;
     }
-    .header-badge {
-      display: inline-block;
-      background: rgba(255,255,255,.15);
-      border: 1px solid rgba(255,255,255,.25);
-      border-radius: 99px;
-      padding: 6px 18px;
-      font-size: .8rem;
-      letter-spacing: .05em;
+    .brand-logo {
+      height: 52px;
+      width: auto;
+      display: block;
+      margin: 0 auto 6px;
+    }
+    .company-name {
+      color: rgba(255,255,255,.75);
+      font-size: .82rem;
+      font-weight: 500;
+      letter-spacing: .08em;
       text-transform: uppercase;
-      margin-bottom: 16px;
-      color: rgba(255,255,255,.9);
+      margin-bottom: 10px;
     }
-    .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
-    .header p  { font-size: .95rem; opacity: .85; max-width: 480px; margin: 0 auto; }
+    .card-header h1 { font-size: 1.75rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .card-header p  { font-size: .9rem; color: rgba(255,255,255,.8); max-width: 440px; margin: 0 auto; }
 
     /* ── Alerts ── */
     .alert {
@@ -89,7 +91,7 @@
     }
     .section-icon {
       width: 42px; height: 42px;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      background: linear-gradient(135deg, #c0392b, #7b241c);
       border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
       font-size: 1.15rem;
@@ -124,10 +126,10 @@
       width: 100%;
       padding: 10px 14px;
       border: 1.5px solid var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: .925rem;
       color: var(--text);
-      background: #fff;
+      background: #fafafa;
       transition: border-color .15s, box-shadow .15s;
       outline: none;
       font-family: inherit;
@@ -135,7 +137,7 @@
     }
     input:focus, select:focus, textarea:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(26,86,219,.12);
+      box-shadow: 0 0 0 3px rgba(192,57,43,.12);
     }
     input.is-error, select.is-error, textarea.is-error { border-color: var(--error); }
     input.is-ok { border-color: var(--success); }
@@ -206,7 +208,7 @@
       text-align: center;
     }
     .btn-submit {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      background: linear-gradient(135deg, #c0392b, #7b241c);
       color: #fff;
       border: none;
       padding: 14px 52px;
@@ -215,14 +217,14 @@
       border-radius: 10px;
       cursor: pointer;
       transition: transform .15s, box-shadow .15s, opacity .15s;
-      box-shadow: 0 4px 15px rgba(26,86,219,.35);
+      box-shadow: 0 4px 15px rgba(192,57,43,.35);
       display: inline-flex;
       align-items: center;
       gap: 10px;
     }
     .btn-submit:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 7px 22px rgba(26,86,219,.45);
+      box-shadow: 0 7px 22px rgba(192,57,43,.45);
     }
     .btn-submit:disabled { opacity: .65; cursor: not-allowed; transform: none; }
 
@@ -242,19 +244,19 @@
     /* ── Footer ── */
     .footer {
       text-align: center;
-      color: rgba(255,255,255,.6);
+      color: #94a3b8;
       font-size: .78rem;
       padding-top: 24px;
     }
 
     /* ── PIX hint ── */
     .hint-box {
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
+      background: #fef2f0;
+      border: 1px solid #f5c6c0;
       border-radius: 8px;
       padding: 10px 14px;
       font-size: .8rem;
-      color: #1e40af;
+      color: #922b21;
       margin-top: 8px;
     }
 
@@ -277,21 +279,14 @@
       font-family: inherit;
     }
     .toggle-btn.active {
-      border-color: var(--primary);
-      background: var(--primary);
+      border-color: #c0392b;
+      background: #c0392b;
       color: #fff;
     }
   </style>
 </head>
 <body>
 <div class="container">
-
-  <!-- Header -->
-  <div class="header">
-    <div class="header-badge">Formulário Seguro</div>
-    <h1>📋 Cadastro de Fornecedor</h1>
-    <p>Preencha as informações abaixo para concluir seu cadastro e receber o pagamento.</p>
-  </div>
 
   <!-- Alerts -->
   <div class="alert alert-success" id="alertSuccess">
@@ -311,6 +306,13 @@
 
   <!-- Card -->
   <div class="card" id="formCard">
+    <!-- Header gradiente -->
+    <div class="card-header">
+      <img class="brand-logo" src="https://static.wixstatic.com/media/022335_2e402d3c02fe4d87b2ea311696ade8dc~mv2.png" alt="Nosso Camarote">
+      <div class="company-name">Camarote</div>
+      <h1>Cadastro de Fornecedor</h1>
+      <p>Preencha as informações abaixo para concluir seu cadastro e receber o pagamento.</p>
+    </div>
     <form id="mainForm" novalidate>
 
       <!-- ① Dados da Empresa -->
@@ -322,7 +324,7 @@
             <div class="section-subtitle">Identificação fiscal do fornecedor</div>
           </div>
         </div>
-        <div class="grid grid-2">
+        <div class="grid grid-2" style="align-items: end">
           <div class="form-group">
             <div class="doc-toggle">
               <button type="button" class="toggle-btn active" id="btnCNPJ" onclick="setDocType('cnpj')">CNPJ</button>
